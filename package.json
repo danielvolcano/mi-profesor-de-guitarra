@@ -1,0 +1,12 @@
+{
+  "name": "mi-profesor-de-guitarra",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Profesor de guitarra flamenca accesible con VoiceOver (PWA)",
+  "scripts": {
+    "test": "node --test tests/unit/*.test.js",
+    "test:e2e": "node tests/e2e.mjs",
+    "serve": "python3 -m http.server 8080"
+  }
+}

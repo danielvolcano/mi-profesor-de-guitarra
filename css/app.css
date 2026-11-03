@@ -1,0 +1,53 @@
+/* Diseño pensado para no necesitar la vista: alto contraste y letra grande
+   por si queda algo de resto visual, y para que un familiar pueda seguirlo. */
+:root {
+  --fondo: #111;
+  --texto: #fff;
+  --acento: #ffd34d;
+  --boton: #222;
+  --borde: #ffd34d;
+  --peligro: #ff7b7b;
+  font-size: 22px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--fondo); color: var(--texto); }
+body {
+  font-family: -apple-system, system-ui, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.5;
+  padding: max(1rem, env(safe-area-inset-top)) 1rem max(2rem, env(safe-area-inset-bottom));
+  -webkit-text-size-adjust: 100%;
+}
+main { max-width: 46rem; margin: 0 auto; }
+h1 { font-size: 1.8rem; color: var(--acento); margin: .6rem 0 1rem; }
+h2 { font-size: 1.25rem; margin: 1.2rem 0 .6rem; }
+h1:focus, h2:focus, .texto:focus { outline: none; }
+.texto { font-size: 1.15rem; }
+.nota { opacity: .85; font-size: .9rem; }
+ul.menu, .menu { list-style: none; padding: 0; margin: 1rem 0; display: grid; gap: .8rem; }
+button, .boton-archivo {
+  display: block; width: 100%;
+  font: inherit; font-size: 1.1rem; font-weight: 600;
+  color: var(--texto); background: var(--boton);
+  border: 3px solid #555; border-radius: 14px;
+  padding: 1.1rem 1rem; min-height: 64px;
+  text-align: left; cursor: pointer;
+}
+button.principal { border-color: var(--borde); background: #3a2f00; font-size: 1.25rem; }
+button.volver { width: auto; min-height: 48px; padding: .6rem 1rem; font-size: 1rem; }
+button.peligro { border-color: var(--peligro); }
+button:focus-visible, .boton-archivo:focus-within { outline: 4px solid var(--acento); outline-offset: 3px; }
+.controles, .opciones { display: grid; gap: .8rem; margin-top: 1.4rem; }
+.opciones button { border-color: var(--borde); }
+fieldset { border: 2px solid #555; border-radius: 14px; margin: 1.2rem 0; padding: .8rem 1rem; }
+legend { font-weight: 700; padding: 0 .4rem; }
+fieldset label { display: flex; align-items: center; gap: .8rem; min-height: 54px; font-size: 1.1rem; }
+input[type=radio] { width: 30px; height: 30px; }
+.boton-archivo input { display: block; margin-top: .6rem; font-size: 1rem; }
+.familiar { font-size: .9rem; }
+.familiar table { border-collapse: collapse; width: 100%; font-size: .85rem; }
+.familiar th, .familiar td { border: 1px solid #555; padding: .3rem .5rem; text-align: left; }
+.visualmente-oculto {
+  position: absolute !important; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+[hidden] { display: none !important; }

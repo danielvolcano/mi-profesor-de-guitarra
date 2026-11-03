@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="es-ES">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mi profesor de guitarra</title>
+  <meta name="description" content="Clases de guitarra flamenca accesibles con VoiceOver.">
+  <meta name="theme-color" content="#111111">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Profesor guitarra">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="iconos/icono-192.png">
+  <link rel="apple-touch-icon" href="iconos/icono-180.png">
+  <link rel="stylesheet" href="css/app.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+<main id="principal">
+
+  <!-- PRIMERA VEZ: elegir cómo hablará el profesor -->
+  <section id="p-bienvenida" class="pantalla" hidden>
+    <h1 tabindex="-1">Mi profesor de guitarra</h1>
+    <p>Bienvenido. Antes de empezar, elige cómo quieres oír al profesor. Podrás cambiarlo cuando quieras en Ayuda y configuración.</p>
+    <p>Con la voz del profesor, la aplicación te habla con una voz propia. Con VoiceOver, las explicaciones las lee tu VoiceOver, con su voz y su velocidad.</p>
+    <ul class="menu">
+      <li><button type="button" id="b-probar-voz">Probar la voz del profesor</button></li>
+      <li><button type="button" id="b-elegir-profesor">Usar la voz del profesor</button></li>
+      <li><button type="button" id="b-elegir-voiceover">Usar VoiceOver</button></li>
+    </ul>
+  </section>
+
+  <!-- INICIO -->
+  <section id="p-inicio" class="pantalla" hidden>
+    <h1 tabindex="-1">Mi profesor de guitarra</h1>
+    <ul class="menu">
+      <li><button type="button" id="b-clase" class="principal">Empezar mi clase de hoy</button></li>
+      <li><button type="button" id="b-repaso">Repasar lo aprendido</button></li>
+      <li><button type="button" id="b-cancion">Practicar una canción</button></li>
+      <li><button type="button" id="b-progreso">Consultar mi progreso</button></li>
+      <li><button type="button" id="b-ayuda">Ayuda y configuración</button></li>
+    </ul>
+    <p id="inicio-estado" class="nota"></p>
+  </section>
+
+  <!-- CLASE -->
+  <section id="p-clase" class="pantalla" hidden>
+    <button type="button" id="b-pausar" class="volver">Pausar y guardar</button>
+    <h1 id="clase-titulo" tabindex="-1">Clase</h1>
+    <h2 id="paso-titulo" tabindex="-1">Paso</h2>
+    <p id="paso-texto" class="texto" tabindex="-1"></p>
+    <div id="paso-opciones" class="opciones" role="group" aria-label="Respuestas" hidden></div>
+    <div class="controles" role="group" aria-label="Controles de la clase">
+      <button type="button" id="b-continuar" class="principal">Continuar</button>
+      <button type="button" id="b-repetir">Repetir</button>
+      <button type="button" id="b-ejemplo">Escuchar ejemplo</button>
+      <button type="button" id="b-otra">Explícamelo de otra forma</button>
+      <button type="button" id="b-anterior">Paso anterior</button>
+    </div>
+  </section>
+
+  <!-- PANTALLA DE TEXTO GENÉRICA: repaso, concepto, canción, progreso, avisos -->
+  <section id="p-texto" class="pantalla" hidden>
+    <button type="button" id="b-texto-volver" class="volver">Volver al inicio</button>
+    <h1 id="texto-titulo" tabindex="-1"></h1>
+    <p id="texto-cuerpo" class="texto" tabindex="-1"></p>
+    <ul id="texto-acciones" class="menu"></ul>
+  </section>
+
+  <!-- AYUDA Y CONFIGURACIÓN -->
+  <section id="p-ayuda" class="pantalla" hidden>
+    <button type="button" class="volver" data-ir="inicio">Volver al inicio</button>
+    <h1 tabindex="-1">Ayuda y configuración</h1>
+    <ul class="menu">
+      <li><button type="button" id="b-como-funciona">Cómo funciona la aplicación</button></li>
+      <li><button type="button" id="b-probar-voz-2">Probar la voz del profesor</button></li>
+      <li><button type="button" id="b-probar-sonido">Probar el sonido de la guitarra</button></li>
+    </ul>
+    <fieldset>
+      <legend>Quién lee las explicaciones</legend>
+      <label><input type="radio" name="voz" value="profesor"> La voz del profesor</label>
+      <label><input type="radio" name="voz" value="voiceover"> VoiceOver</label>
+    </fieldset>
+    <fieldset>
+      <legend>Velocidad de la voz del profesor</legend>
+      <label><input type="radio" name="velocidad" value="lenta"> Lenta</label>
+      <label><input type="radio" name="velocidad" value="normal"> Normal</label>
+      <label><input type="radio" name="velocidad" value="rapida"> Rápida</label>
+    </fieldset>
+    <fieldset>
+      <legend>Volumen de los ejemplos</legend>
+      <label><input type="radio" name="volumen" value="0.5"> Bajo</label>
+      <label><input type="radio" name="volumen" value="0.9"> Normal</label>
+      <label><input type="radio" name="volumen" value="1.4"> Alto</label>
+    </fieldset>
+    <ul class="menu">
+      <li><button type="button" id="b-familiar">Modo familiar</button></li>
+    </ul>
+  </section>
+
+  <!-- MODO FAMILIAR -->
+  <section id="p-familiar" class="pantalla familiar" hidden>
+    <button type="button" class="volver" data-ir="ayuda">Volver a Ayuda</button>
+    <h1 tabindex="-1">Modo familiar</h1>
+    <p>Esta sección es para la familia: revisar el registro, anotar comprobaciones presenciales y hacer copias de seguridad.</p>
+    <h2>Registro</h2>
+    <div id="familiar-registro"></div>
+    <h2>Anotar una comprobación presencial</h2>
+    <p>Úsalo solo si has visto en persona que lo hace bien. Marca la habilidad como dominada.</p>
+    <div id="familiar-habilidades" class="menu"></div>
+    <h2>Clases</h2>
+    <ul class="menu">
+      <li><button type="button" id="b-reiniciar-clase">Volver a empezar la clase actual desde el principio</button></li>
+      <li><button type="button" id="b-repetir-anterior">Repetir la clase anterior</button></li>
+    </ul>
+    <h2>Copia de seguridad</h2>
+    <ul class="menu">
+      <li><button type="button" id="b-exportar">Exportar copia del progreso</button></li>
+      <li><label class="boton-archivo">Importar copia del progreso <input type="file" id="i-importar" accept="application/json,.json"></label></li>
+      <li><button type="button" id="b-borrar" class="peligro">Borrar todo el progreso</button></li>
+    </ul>
+    <p class="nota" id="familiar-version"></p>
+  </section>
+
+</main>
+<p id="aviso" class="visualmente-oculto" role="status" aria-live="polite"></p>
+<noscript>Esta aplicación necesita JavaScript.</noscript>
+</body>
+</html>
