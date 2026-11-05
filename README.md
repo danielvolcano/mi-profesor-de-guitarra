@@ -11,7 +11,7 @@ Aplicación web instalable (PWA) para aprender guitarra flamenca desde cero, dis
 Conviene hacerlo con ayuda de un familiar la primera vez.
 
 1. Abre **Safari** en el iPad y entra en la dirección de la aplicación:
-   `https://<usuario>.github.io/mi-profesor-de-guitarra/`
+   `https://danielvolcano.github.io/mi-profesor-de-guitarra/`
 2. Pulsa el botón **Compartir** (el cuadrado con una flecha hacia arriba).
 3. Elige **Añadir a pantalla de inicio** y después **Añadir**.
 4. A partir de ahora, ábrela **siempre desde el icono «Profesor guitarra»** de la pantalla de inicio, no desde Safari.
