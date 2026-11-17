@@ -14,7 +14,7 @@ const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', '
 export function estadoInicial() {
   return {
     version: 1,
-    config: { voz: null, velocidad: 'normal', volumen: 0.9, diasPractica: [2, 4, 6] },
+    config: { voz: null, velocidad: 'normal', pausa: 'normal', volumen: 0.9, diasPractica: [2, 4, 6] },
     claseActual: PROGRAMA[0].id,
     enCurso: null,
     sesiones: [],

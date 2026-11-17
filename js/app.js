@@ -4,7 +4,7 @@ import { PROGRAMA, CONCEPTOS, HABILIDADES, buscarClase } from './contenido/catal
 import { hablar, callar, vozDisponible } from './voz.js';
 import { tocar, detener, confirmacion, fijarVolumen, CUERDAS } from './sonido.js';
 
-export const VERSION = '0.2.0';
+export const VERSION = '0.2.1';
 const $ = (id) => document.getElementById(id);
 const ahora = () => Date.now();
 
@@ -49,9 +49,13 @@ function decir(frases, retraso = 300) {
   return hablar(frases, { velocidad: p.config.velocidad, retraso }).finally(() => { profesorHablando = false; });
 }
 
+// Espera a que VoiceOver termine de anunciar lo que tiene el foco antes de que hable el profesor.
+// VoiceOver lee el texto, el tipo de elemento («botón», «encabezado») y a veces una pista
+// («toca dos veces para activar»), así que se deja margen. Ajustable en Ayuda.
+const FACTOR_PAUSA = { corta: 0.6, normal: 1, larga: 1.6 };
 function retrasoTras(texto) {
-  // Tiempo aproximado para que VoiceOver termine de leer un título corto.
-  return 700 + 45 * texto.length;
+  const factor = FACTOR_PAUSA[p.config.pausa] || 1;
+  return Math.round((1600 + 75 * String(texto).length) * factor);
 }
 
 function avisar(texto) {
@@ -128,7 +132,7 @@ function irBienvenida() {
   enfocar(document.querySelector('#p-bienvenida h1'));
 }
 $('b-probar-voz').addEventListener('click', probarVoz);
-$('b-elegir-profesor').addEventListener('click', () => { elegirVoz('profesor'); irInicio(); decir('Perfecto. Te hablaré yo durante las clases.', 1500); });
+$('b-elegir-profesor').addEventListener('click', () => { elegirVoz('profesor'); irInicio(); decir('Perfecto. Te hablaré yo durante las clases.', retrasoTras('Mi profesor de guitarra, encabezado')); });
 $('b-elegir-voiceover').addEventListener('click', () => { elegirVoz('voiceover'); irInicio(); });
 
 function elegirVoz(modo) {
@@ -233,40 +237,48 @@ function mostrarPaso({ entrada = false, frases = null } = {}) {
   const esPregunta = paso.tipo === 'pregunta' && !feedback;
   const esJuego = paso.tipo === 'juegoOido' && !juego.terminado;
   const opciones = $('paso-opciones');
-  opciones.innerHTML = '';
+  const juegoYaMontado = esJuego && opciones.dataset.juego === paso.id && opciones.children.length > 0;
+  if (!juegoYaMontado) { opciones.innerHTML = ''; delete opciones.dataset.juego; }
   opciones.hidden = !(esPregunta || esJuego);
-  if (esPregunta) {
+  if (juegoYaMontado) {
+    // mismas teclas, siguiente ronda
+  } else if (esPregunta) {
     for (const op of paso.opciones) opciones.append(botonOpcion(op.etiqueta, () => responderPregunta(op)));
   } else if (esJuego) {
     opciones.setAttribute('aria-label', 'Juego de oído');
+    opciones.dataset.juego = paso.id;
     opciones.append(botonOpcion('Escuchar el sonido', escucharJuego, 'b-escuchar-juego'));
     for (const cat of categoriasOido(paso)) opciones.append(botonOpcion(cat.etiqueta, () => responderJuego(cat.id)));
   }
   if (esPregunta) opciones.setAttribute('aria-label', 'Respuestas');
 
   const continuar = $('b-continuar');
+  const etiquetaAntes = continuar.textContent;
   continuar.hidden = esPregunta || esJuego;
   continuar.textContent = feedback?.opcion.repetir ? 'Intentarlo otra vez' : (i === clase.pasos.length - 1 && !esPregunta ? 'Terminar la clase' : 'Continuar');
   $('b-ejemplo').hidden = !paso.ejemplo;
   $('b-otra').hidden = !paso.otraForma || !!feedback;
   $('b-anterior').hidden = i === 0;
 
-  // Foco y voz
+  // Foco y voz. Regla: si el foco se mueve o cambia el nombre del botón enfocado,
+  // VoiceOver lo anuncia; el profesor espera a que termine.
   const activo = document.activeElement;
-  const enControles = activo && activo.closest?.('#p-clase .controles') && !activo.hidden;
+  const sigueVisible = activo && activo !== document.body && activo.offsetParent !== null && !activo.closest('[hidden]');
+  const enControles = sigueVisible && activo.closest?.('#p-clase .controles');
+  const enJuego = sigueVisible && juegoYaMontado && activo.closest?.('#paso-opciones');
   if (modoVoz() === 'voiceover') {
     enfocarYLeer(texto, $('paso-titulo'));
+  } else if (!entrada && enJuego) {
+    decir(dichas, 400); // el foco sigue en el mismo botón del juego
   } else if (!entrada && enControles) {
-    decir(dichas, 300); // el foco sigue en el mismo botón: VoiceOver no dice nada
-  } else if ((feedback || juego?.terminado) && !continuar.hidden) {
+    const cambia = activo === continuar && continuar.textContent !== etiquetaAntes;
+    decir(dichas, cambia ? retrasoTras(`${continuar.textContent}, botón`) : 400);
+  } else if (!continuar.hidden && (feedback || juego?.terminado)) {
     enfocar(continuar);
-    decir(dichas, 1300);
-  } else if (esJuego && juego.ronda > 0) {
-    enfocar($('b-escuchar-juego'));
-    decir(dichas, 1300);
+    decir(dichas, retrasoTras(`${continuar.textContent}, botón`));
   } else {
     enfocar($('paso-titulo'));
-    decir(dichas, retrasoTras(titulo));
+    decir(dichas, retrasoTras(`${titulo}, encabezado nivel 2`));
   }
 }
 
@@ -378,7 +390,7 @@ $('b-pausar').addEventListener('click', () => {
   confirmacion();
   irInicio();
   avisar(`Clase guardada en el paso ${n}.`);
-  decir([`Clase guardada en el paso ${n}.`, 'La próxima vez seguiremos justo aquí.'], 1500);
+  decir([`Clase guardada en el paso ${n}.`, 'La próxima vez seguiremos justo aquí.'], retrasoTras('Mi profesor de guitarra, encabezado'));
 });
 
 function terminar() {
@@ -460,6 +472,7 @@ function irAyuda() {
   mostrarPantalla('ayuda', 'Ayuda y configuración');
   marcarRadio('voz', modoVoz());
   marcarRadio('velocidad', p.config.velocidad);
+  marcarRadio('pausa', p.config.pausa || 'normal');
   marcarRadio('volumen', String(p.config.volumen));
   enfocar(document.querySelector('#p-ayuda h1'));
 }
@@ -485,10 +498,13 @@ $('b-como-funciona').addEventListener('click', () => irTexto({
 }));
 
 for (const r of document.querySelectorAll('input[name=voz]')) {
-  r.addEventListener('change', () => { elegirVoz(r.value); if (r.value === 'profesor') decir('Ahora te hablaré yo.', 1200); });
+  r.addEventListener('change', () => { elegirVoz(r.value); if (r.value === 'profesor') decir('Ahora te hablaré yo.', retrasoTras('seleccionado, botón de radio, uno de tres')); });
 }
 for (const r of document.querySelectorAll('input[name=velocidad]')) {
-  r.addEventListener('change', () => { p.config.velocidad = r.value; guardar(); decir('Así hablaré a partir de ahora.', 1200); });
+  r.addEventListener('change', () => { p.config.velocidad = r.value; guardar(); decir('Así hablaré a partir de ahora.', retrasoTras('seleccionado, botón de radio, uno de tres')); });
+}
+for (const r of document.querySelectorAll('input[name=pausa]')) {
+  r.addEventListener('change', () => { p.config.pausa = r.value; guardar(); decir('Esperaré así antes de hablar.', retrasoTras('seleccionado, botón de radio, uno de tres')); });
 }
 for (const r of document.querySelectorAll('input[name=volumen]')) {
   r.addEventListener('change', () => { p.config.volumen = Number(r.value); fijarVolumen(p.config.volumen); guardar(); tocar(6); });

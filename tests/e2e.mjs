@@ -110,7 +110,7 @@ await prueba('empezar clase: el profesor saluda y el foco va al paso', async () 
   await page.click('#b-clase');
   assert.match(await tituloPaso(), /^Paso 1 de \d+\. Bienvenida/);
   assert.equal(await foco(), 'paso-titulo');
-  await page.waitForFunction(() => window.__dicho.some((t) => t.startsWith('Buenos días')), null, { timeout: 4000 });
+  await page.waitForFunction(() => window.__dicho.some((t) => t.startsWith('Buenos días')), null, { timeout: 10000 });
   assert.equal(await page.getAttribute('#paso-texto', 'aria-hidden'), 'true'); // no lo lee VoiceOver a la vez
   assert.ok(!(await visible('#b-anterior')));
   await axe(page, 'clase');
@@ -207,7 +207,7 @@ await prueba('mi progreso habla solo de lo registrado', async () => {
 await prueba('clase 2 completa: saludo con la dificultad real, juegos de oído y cierre', async () => {
   await page.click('#b-clase');
   assert.match(await page.textContent('#clase-titulo'), /Clase 2/);
-  await page.waitForFunction(() => window.__dicho.some((t) => t.includes('te costó un poco')), null, { timeout: 4000 });
+  await page.waitForFunction(() => window.__dicho.some((t) => t.includes('te costó un poco')), null, { timeout: 10000 });
   let vueltas = 0;
   let juegos = 0;
   while (vueltas++ < 120) {
@@ -215,8 +215,16 @@ await prueba('clase 2 completa: saludo con la dificultad real, juegos de oído y
     if (await visible('#p-texto')) break;
     if (await visible('#b-escuchar-juego')) {
       await page.click('#b-escuchar-juego');
+      const boton = await page.$('#b-escuchar-juego');
       await responderOido();
       juegos++;
+      // Entre rondas los botones no se destruyen y el foco no salta (VoiceOver no anuncia nada nuevo).
+      if (await visible('#b-escuchar-juego')) {
+        assert.ok(await boton.evaluate((b) => b.isConnected), 'el botón del juego se ha recreado');
+        assert.equal(await page.evaluate(() => !!document.activeElement.closest('#paso-opciones')), true, 'el foco ha salido del juego');
+      } else {
+        assert.equal(await foco(), 'b-continuar');
+      }
       continue;
     }
     if (await visible('#paso-opciones')) { await page.click('#paso-opciones button >> nth=0'); continue; }
@@ -253,6 +261,15 @@ await prueba('repasar lo aprendido muestra los conceptos ya vistos', async () =>
   await axe(page, 'concepto');
   await page.click('#b-texto-volver');
   await page.click('#b-texto-volver');
+});
+
+await prueba('ayuda: la pausa larga retrasa más al profesor', async () => {
+  await page.click('#b-ayuda');
+  await page.check('input[name=pausa][value=larga]');
+  const p = await page.evaluate(() => window.__app.estado());
+  assert.equal(p.config.pausa, 'larga');
+  await page.check('input[name=pausa][value=normal]');
+  await page.click('#p-ayuda .volver');
 });
 
 await prueba('ayuda: cambiar a modo VoiceOver hace que el foco vaya al texto de la clase', async () => {

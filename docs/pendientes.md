@@ -24,6 +24,10 @@
 - [ ] Semanas 5 y siguientes: acordes, rasgueo y tangos por arriba (La menor, Sol, Fa, Mi)
 - [ ] Estudio de la conversación por voz con IA (con costes antes de decidir)
 
+## Observaciones de la prueba real
+- 17/11: instrucciones claras. Un par de veces hablaron a la vez el profesor y VoiceOver.
+  Corregido en 0.2.1 (pausas más largas, foco estable en el juego de oído y opción de pausa larga). Pendiente de confirmar en el iPad.
+
 ## Limitaciones conocidas
 - Si el juego de oído se interrumpe con Pausar, al volver empieza de nuevo.
 - La voz depende de las voces instaladas en el iPad.
