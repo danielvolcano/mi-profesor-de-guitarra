@@ -1,10 +1,11 @@
 // Catálogo del programa: clases, habilidades y conceptos para repasar.
 import { clase1 } from './clase1.js';
+import { clase2 } from './clase2.js';
 
 // Orden del programa. Las clases sin «contenido» aún no están disponibles.
 export const PROGRAMA = [
   { id: 's1c1', semana: 1, numero: 1, titulo: 'Conocer tu guitarra', contenido: clase1 },
-  { id: 's1c2', semana: 1, numero: 2, titulo: 'Las cuerdas por su número y por su sonido' },
+  { id: 's1c2', semana: 1, numero: 2, titulo: 'Las cuerdas por su número y por su sonido', contenido: clase2 },
   { id: 's1c3', semana: 1, numero: 3, titulo: 'Repaso y evaluación de la semana 1' },
   { id: 's2c1', semana: 2, numero: 4, titulo: 'El pulgar flamenco' },
   { id: 's2c2', semana: 2, numero: 5, titulo: 'Índice y medio' },
@@ -63,6 +64,14 @@ export const CONCEPTOS = [
       'La primera es la más fina y está abajo, cerca de tus piernas.',
     ],
     ejemplo: { notas: [6, 5, 4, 3, 2, 1] },
+  },
+  {
+    id: 'contar', habilidad: 'cuerdas', titulo: 'Encontrar cualquier cuerda',
+    texto: [
+      'Pon la yema del índice sobre la sexta, la más gruesa, arriba del todo.',
+      'Baja despacio, cuerda a cuerda, contando: sexta, quinta, cuarta, tercera, segunda, primera.',
+      'Así llegas siempre a la cuerda que buscas.',
+    ],
   },
   {
     id: 'graveAguda', habilidad: 'graveAguda', titulo: 'Cuerdas graves y agudas',

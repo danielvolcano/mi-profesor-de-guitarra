@@ -6,13 +6,14 @@
 - [x] Voz del profesor y modo VoiceOver, con coordinación de voces
 - [x] Mi progreso, Repasar, Ayuda y configuración, Modo familiar
 - [x] Pruebas automáticas (lógica y navegador)
-- [ ] Publicar en GitHub Pages
-- [ ] Instalar en el iPad del alumno (pantalla de inicio)
+- [x] Publicar en GitHub Pages
+- [x] Instalar en el iPad del alumno (pantalla de inicio)
 - [ ] **Prueba real con VoiceOver** (docs/prueba-voiceover.md)
 - [ ] Conocer el modelo de iPad y la versión de iPadOS
 
 ## Siguiente
-- [ ] Clases 2 y 3 (semana 1), con evaluación semanal: 11 de 12 cuerdas a la primera
+- [x] Clase 2 (versión 0.2): cuerdas por número, salteadas y juegos de oído
+- [ ] Clase 3 (semana 1): repaso y evaluación semanal (11 de 12 cuerdas a la primera)
 - [ ] Ajustar el guion de la clase 1 según la prueba real
 - [ ] Semana 2: palmas y metrónomo accesible
 - [ ] Semanas 3 y 4: notas pisadas, bajada andaluza y «Mi primera falseta»

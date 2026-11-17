@@ -24,9 +24,10 @@ Conviene hacerlo con ayuda de un familiar la primera vez.
 
 **Recomendado:** en *Ajustes → Accesibilidad → Contenido leído → Voces → Español (España)*, descargar una voz «mejorada», como Mónica. La voz del profesor sonará mucho más natural.
 
-## Qué incluye la versión 0.1
+## Qué incluye la versión 0.2
 
 - Pantalla de inicio con las 5 opciones. La primera, **Empezar mi clase de hoy**, se acuerda siempre de por dónde va.
+- **Clase 2 (unos 45 minutos):** las cuerdas por su número, en orden y salteadas, el método de «contar desde la sexta», y dos juegos de oído (¿sexta o primera? y ¿grave o aguda?). El saludo recuerda las dificultades registradas en la clase anterior.
 - **Clase 1 completa (unos 45 minutos):** partes de la guitarra, posición flamenca, las seis cuerdas, primer sonido con el pulgar, juego de oído, la bajada andaluza y la evaluación.
 - En cada paso: Continuar, Repetir, Escuchar ejemplo, Explícamelo de otra forma, Paso anterior, y Pausar y guardar.
 - Sonidos de ejemplo sintetizados, sin grabaciones de terceros.

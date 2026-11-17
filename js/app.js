@@ -4,7 +4,7 @@ import { PROGRAMA, CONCEPTOS, HABILIDADES, buscarClase } from './contenido/catal
 import { hablar, callar, vozDisponible } from './voz.js';
 import { tocar, detener, confirmacion, fijarVolumen, CUERDAS } from './sonido.js';
 
-export const VERSION = '0.1.0';
+export const VERSION = '0.2.0';
 const $ = (id) => document.getElementById(id);
 const ahora = () => Date.now();
 
@@ -204,13 +204,24 @@ function pasoActual() { return clase.pasos[p.enCurso.paso]; }
 function textoPaso(paso) {
   if (feedback) return feedback.opcion.respuesta;
   if (paso.tipo === 'juegoOido' && juego) return juego.frases;
-  return paso.texto;
+  return textoBase(paso);
 }
+
+function textoBase(paso) {
+  return typeof paso.texto === 'function' ? paso.texto(p) : paso.texto;
+}
+
+// Categorías del juego de oído. Por defecto: grave o aguda.
+const CATEGORIAS_OIDO = [
+  { id: 'grave', etiqueta: 'Grave', cuerdas: [6, 5, 4], frase: 'una cuerda grave' },
+  { id: 'aguda', etiqueta: 'Aguda', cuerdas: [3, 2, 1], frase: 'una cuerda aguda' },
+];
+const categoriasOido = (paso) => paso.categorias || CATEGORIAS_OIDO;
 
 function mostrarPaso({ entrada = false, frases = null } = {}) {
   const paso = pasoActual();
   const i = p.enCurso.paso;
-  if (paso.tipo === 'juegoOido' && !juego) juego = { ronda: 0, aciertos: 0, nota: null, terminado: false, frases: paso.texto };
+  if (paso.tipo === 'juegoOido' && !juego) juego = { ronda: 0, aciertos: 0, nota: null, terminado: false, frases: textoBase(paso) };
 
   const titulo = `Paso ${i + 1} de ${clase.pasos.length}. ${paso.titulo}`;
   $('paso-titulo').textContent = titulo;
@@ -229,8 +240,7 @@ function mostrarPaso({ entrada = false, frases = null } = {}) {
   } else if (esJuego) {
     opciones.setAttribute('aria-label', 'Juego de oído');
     opciones.append(botonOpcion('Escuchar el sonido', escucharJuego, 'b-escuchar-juego'));
-    opciones.append(botonOpcion('Grave', () => responderJuego('grave')));
-    opciones.append(botonOpcion('Aguda', () => responderJuego('aguda')));
+    for (const cat of categoriasOido(paso)) opciones.append(botonOpcion(cat.etiqueta, () => responderJuego(cat.id)));
   }
   if (esPregunta) opciones.setAttribute('aria-label', 'Respuestas');
 
@@ -281,18 +291,19 @@ function responderPregunta(op) {
 function responderJuego(eleccion) {
   silencio();
   if (!juego.nota) {
-    juego.frases = ['Primero pulsa Escuchar el sonido. Después elige Grave o Aguda.'];
+    juego.frases = [`Primero pulsa Escuchar el sonido. Después elige ${categoriasOido(pasoActual()).map((c) => c.etiqueta).join(' o ')}.`];
     return mostrarPaso();
   }
   const cuerda = juego.nota;
-  const correcta = cuerda >= 4 ? 'grave' : 'aguda';
+  const cats = categoriasOido(pasoActual());
+  const correcta = cats.find((c) => c.cuerdas.includes(cuerda));
   const nombres = { 6: 'la sexta', 5: 'la quinta', 4: 'la cuarta', 3: 'la tercera', 2: 'la segunda', 1: 'la primera' };
-  const acierto = eleccion === correcta;
+  const acierto = eleccion === correcta.id;
   if (acierto) juego.aciertos++;
   juego.ronda++;
   juego.nota = null;
   const total = pasoActual().rondas;
-  const frases = [acierto ? `¡Bien! Era ${correcta}: ${nombres[cuerda]} cuerda.` : `Era ${correcta}: ${nombres[cuerda]} cuerda.`];
+  const frases = [`${acierto ? '¡Bien! ' : ''}Era ${nombres[cuerda]} cuerda, ${correcta.frase}.`];
   if (juego.ronda >= total) {
     juego.terminado = true;
     P.responder(p, pasoActual().id, { aciertos: juego.aciertos, total }, ahora());
@@ -307,7 +318,10 @@ function responderJuego(eleccion) {
 
 function escucharJuego() {
   silencio();
-  if (!juego.nota) juego.nota = [6, 5, 4, 3, 2, 1][Math.floor(Math.random() * 6)];
+  if (!juego.nota) {
+    const pool = categoriasOido(pasoActual()).flatMap((c) => c.cuerdas);
+    juego.nota = pool[Math.floor(Math.random() * pool.length)];
+  }
   tocar(juego.nota);
 }
 

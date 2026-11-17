@@ -1,6 +1,6 @@
 // Service worker: guarda la aplicación en el iPad para que funcione sin conexión.
 // Al publicar una versión nueva, cambia VERSION para que se actualice.
-const VERSION = 'mpg-0.1.0';
+const VERSION = 'mpg-0.2.0';
 const ARCHIVOS = [
   './',
   'index.html',
@@ -12,6 +12,7 @@ const ARCHIVOS = [
   'js/sonido.js',
   'js/contenido/catalogo.js',
   'js/contenido/clase1.js',
+  'js/contenido/clase2.js',
   'iconos/icono-180.png',
   'iconos/icono-192.png',
   'iconos/icono-512.png',

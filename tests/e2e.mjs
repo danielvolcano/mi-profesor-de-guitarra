@@ -28,6 +28,14 @@ const STUB_VOZ = () => {
 };
 
 let fallos = 0;
+async function responderOido() {
+  const ultimo = await page.evaluate(() => window.__ultimoSonido[0]);
+  const etiquetas = await page.$$eval('#paso-opciones button', (bs) => bs.map((b) => b.textContent));
+  let eleccion;
+  if (etiquetas.includes('Grave')) eleccion = ['E2', 'A2', 'D3'].includes(ultimo) ? 'Grave' : 'Aguda';
+  else eleccion = ultimo === 'E2' ? 'Sexta' : 'Primera';
+  await page.click(`#paso-opciones button:text-is("${eleccion}")`);
+}
 async function prueba(nombre, fn) {
   try { await fn(); console.log(`ok - ${nombre}`); } catch (e) { fallos++; console.log(`FALLO - ${nombre}\n   ${e.message}`); }
 }
@@ -143,9 +151,7 @@ await prueba('recorrer la clase completa: preguntas, juego de oído y evaluació
     if (await visible('#p-texto')) break;
     if (await visible('#b-escuchar-juego')) {
       await page.click('#b-escuchar-juego');
-      const ultimo = await page.evaluate(() => window.__ultimoSonido[0]);
-      const grave = ['E2', 'A2', 'D3'].includes(ultimo);
-      await page.click(`#paso-opciones button:text-is("${grave ? 'Grave' : 'Aguda'}")`);
+      await responderOido();
       continue;
     }
     if (await visible('#paso-opciones')) {
@@ -198,9 +204,41 @@ await prueba('mi progreso habla solo de lo registrado', async () => {
   await page.click('#b-texto-volver');
 });
 
-await prueba('la clase 2 aún no existe: lo dice y ofrece repetir la clase 1', async () => {
+await prueba('clase 2 completa: saludo con la dificultad real, juegos de oído y cierre', async () => {
+  await page.click('#b-clase');
+  assert.match(await page.textContent('#clase-titulo'), /Clase 2/);
+  await page.waitForFunction(() => window.__dicho.some((t) => t.includes('te costó un poco')), null, { timeout: 4000 });
+  let vueltas = 0;
+  let juegos = 0;
+  while (vueltas++ < 120) {
+    await espera(30);
+    if (await visible('#p-texto')) break;
+    if (await visible('#b-escuchar-juego')) {
+      await page.click('#b-escuchar-juego');
+      await responderOido();
+      juegos++;
+      continue;
+    }
+    if (await visible('#paso-opciones')) { await page.click('#paso-opciones button >> nth=0'); continue; }
+    await page.click('#b-continuar');
+  }
+  assert.equal(juegos, 12);
+  assert.equal(await page.textContent('#texto-titulo'), 'Clase terminada');
+  const t = await page.textContent('#texto-cuerpo');
+  assert.match(t, /4 de 4 cuerdas/);
+  assert.match(t, /6 de 6 en sexta o primera y 6 de 6 en grave o aguda/);
+  const p = await page.evaluate(() => window.__app.estado());
+  assert.equal(p.claseActual, 's1c3');
+  assert.equal(p.habilidades.cuerdas.estado, 'comprendido');
+  assert.ok(Object.values(p.habilidades).every((h) => h.estado !== 'dominado'));
+  assert.ok(p.dificultades.find((d) => d.id === 'cuerda-tercera').resuelta);
+  await page.click('#b-texto-volver');
+});
+
+await prueba('la clase 3 aún no existe: lo dice y ofrece repetir la clase 2', async () => {
   await page.click('#b-clase');
   assert.match(await page.textContent('#texto-cuerpo'), /estará disponible muy pronto/);
+  assert.match(await page.textContent('#texto-acciones button >> nth=0'), /clase 2/);
   await page.click('#texto-acciones button >> nth=0');
   assert.match(await tituloPaso(), /^Paso 1 /);
   await page.click('#b-pausar');
