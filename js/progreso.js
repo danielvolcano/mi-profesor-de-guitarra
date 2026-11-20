@@ -20,6 +20,7 @@ export function estadoInicial() {
     sesiones: [],
     habilidades: {},
     dificultades: [],
+    evaluaciones: [],
   };
 }
 
@@ -119,8 +120,13 @@ export function terminarClase(p, clase, ahora) {
   for (const h of resultado.habilidades) subirHabilidad(p, h.id, h.estado, h.fuente, ahora);
   for (const id of resultado.resueltas) resolverDificultad(p, id, ahora);
   for (const d of resultado.dificultades) anotarDificultad(p, d, clase.id, ahora);
+  if (resultado.evaluacion) {
+    (p.evaluaciones ||= []).push({ claseId: clase.id, semana: clase.semana, fecha: fechaLocal(ahora), ...resultado.evaluacion });
+  }
+  // Una evaluación semanal no superada se repite: nunca se avanza solo porque pase el tiempo.
   const siguiente = siguienteClase(clase.id);
-  if (siguiente) p.claseActual = siguiente.id;
+  if (resultado.repetir) p.claseActual = clase.id;
+  else if (siguiente) p.claseActual = siguiente.id;
   p.enCurso = null;
   return resultado;
 }

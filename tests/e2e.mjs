@@ -31,9 +31,11 @@ let fallos = 0;
 async function responderOido() {
   const ultimo = await page.evaluate(() => window.__ultimoSonido[0]);
   const etiquetas = await page.$$eval('#paso-opciones button', (bs) => bs.map((b) => b.textContent));
-  let eleccion;
-  if (etiquetas.includes('Grave')) eleccion = ['E2', 'A2', 'D3'].includes(ultimo) ? 'Grave' : 'Aguda';
-  else eleccion = ultimo === 'E2' ? 'Sexta' : 'Primera';
+  const candidatos = {
+    E2: ['Mi', 'Sexta', 'Grave'], F2: ['Fa'], G2: ['Sol'], A2: ['La', 'Quinta', 'Grave'],
+    D3: ['Cuarta', 'Grave'], G3: ['Aguda'], B3: ['Segunda', 'Aguda'], E4: ['Primera', 'Aguda'],
+  }[ultimo];
+  const eleccion = candidatos.find((c) => etiquetas.includes(c));
   await page.click(`#paso-opciones button:text-is("${eleccion}")`);
 }
 async function prueba(nombre, fn) {
@@ -243,13 +245,66 @@ await prueba('clase 2 completa: saludo con la dificultad real, juegos de oído y
   await page.click('#b-texto-volver');
 });
 
-await prueba('la clase 3 aún no existe: lo dice y ofrece repetir la clase 2', async () => {
+async function recorrerClase({ probarVolver = false } = {}) {
+  let vueltas = 0;
+  let volverProbado = false;
+  while (vueltas++ < 150) {
+    await espera(20);
+    if (await visible('#p-texto')) return;
+    if (await visible('#b-escuchar-juego')) { await page.click('#b-escuchar-juego'); await responderOido(); continue; }
+    if (await visible('#paso-opciones')) {
+      const otra = page.locator('#paso-opciones button:text-is("Quiero intentarlo otra vez")');
+      if (probarVolver && !volverProbado && await otra.count()) {
+        volverProbado = true;
+        const antes = await tituloPaso();
+        await otra.click();
+        assert.equal(await page.textContent('#b-continuar'), 'Volver a intentarlo');
+        await page.click('#b-continuar');
+        const despues = await tituloPaso();
+        assert.notEqual(despues, antes, 'Volver a intentarlo debe ir al paso anterior');
+        assert.equal(await page.textContent('#b-ejemplo'), 'Empezar las palmas');
+        await page.click('#b-ejemplo');
+        assert.ok(await page.evaluate(() => window.__ultimasPalmas?.bpm > 0), 'suenan las palmas');
+        continue;
+      }
+      await page.click('#paso-opciones button >> nth=0');
+      continue;
+    }
+    if (await visible('#b-ejemplo')) await page.click('#b-ejemplo');
+    await page.click('#b-continuar');
+  }
+  throw new Error('la clase no termina');
+}
+
+await prueba('clases 3 a 10 completas: evaluaciones semanales, palmas y bajada andaluza', async () => {
+  for (let n = 3; n <= 10; n++) {
+    await page.click('#b-clase');
+    assert.match(await page.textContent('#clase-titulo'), new RegExp(`^Clase ${n}:`));
+    await recorrerClase({ probarVolver: n === 6 });
+    assert.equal(await page.textContent('#texto-titulo'), 'Clase terminada');
+    await page.click('#b-texto-volver');
+  }
+  const p = await page.evaluate(() => window.__app.estado());
+  assert.equal(p.claseActual, 's4c2');
+  assert.deepEqual(p.evaluaciones.map((e) => e.superada), [true, true, true]);
+  for (const id of ['cuerdas', 'secuenciaPulso', 'notasSexta']) assert.equal(p.habilidades[id].estado, 'dominado', id);
+});
+
+await prueba('practicar una canción ofrece la bajada con palmas', async () => {
+  await page.click('#b-cancion');
+  const acciones = await page.$$eval('#texto-acciones button', (bs) => bs.map((b) => b.textContent));
+  assert.equal(acciones[0], 'Tocar la bajada con palmas lentas');
+  assert.ok(acciones.includes('Parar el sonido'));
+  await page.click('#texto-acciones button >> nth=0');
+  assert.equal(await page.evaluate(() => window.__ultimasPalmas.bpm), 50);
+  await page.click('#b-texto-volver');
+});
+
+await prueba('la clase 11 aún no existe: lo dice y ofrece repetir la clase 10', async () => {
   await page.click('#b-clase');
   assert.match(await page.textContent('#texto-cuerpo'), /estará disponible muy pronto/);
-  assert.match(await page.textContent('#texto-acciones button >> nth=0'), /clase 2/);
-  await page.click('#texto-acciones button >> nth=0');
-  assert.match(await tituloPaso(), /^Paso 1 /);
-  await page.click('#b-pausar');
+  assert.match(await page.textContent('#texto-acciones button >> nth=0'), /clase 10/);
+  await page.click('#b-texto-volver');
 });
 
 await prueba('repasar lo aprendido muestra los conceptos ya vistos', async () => {
@@ -278,6 +333,7 @@ await prueba('ayuda: cambiar a modo VoiceOver hace que el foco vaya al texto de 
   await page.check('input[name=voz][value=voiceover]');
   await page.click('#p-ayuda .volver');
   await page.click('#b-clase');
+  if (await visible('#p-texto')) await page.click('#texto-acciones button >> nth=0'); // repetir la última clase
   await espera(300);
   assert.equal(await foco(), 'paso-texto');
   assert.equal(await page.getAttribute('#paso-texto', 'aria-hidden'), 'false');
@@ -290,12 +346,14 @@ await prueba('modo familiar: registro, comprobación y copia', async () => {
   await page.click('#texto-acciones button');
   assert.ok(await visible('#p-familiar'));
   assert.match(await page.textContent('#familiar-registro'), /Sesiones/);
+  const dominadasAntes = await page.evaluate(() => Object.values(window.__app.estado().habilidades).filter((h) => h.estado === 'dominado').length);
+  assert.match(await page.textContent('#familiar-registro'), /Evaluaciones semanales/);
   page.once('dialog', (d) => d.accept());
   await page.click('#familiar-habilidades button >> nth=0');
   const p = await page.evaluate(() => window.__app.estado());
   const dominadas = Object.values(p.habilidades).filter((h) => h.estado === 'dominado');
-  assert.equal(dominadas.length, 1);
-  assert.equal(dominadas[0].historial.at(-1).fuente, 'familiar');
+  assert.equal(dominadas.length, dominadasAntes + 1);
+  assert.ok(dominadas.some((h) => h.historial.at(-1).fuente === 'familiar'));
   await axe(page, 'familiar');
 });
 
@@ -307,7 +365,9 @@ await prueba('funciona sin conexión tras la primera visita', async () => {
   await page.reload();
   assert.ok(await visible('#p-inicio'));
   await page.click('#b-clase');
+  if (await visible('#p-texto')) await page.click('#texto-acciones button >> nth=0');
   assert.ok(await visible('#p-clase'));
+  assert.match(await page.textContent('#clase-titulo'), /Clase 10/);
   await contexto.setOffline(false);
 });
 

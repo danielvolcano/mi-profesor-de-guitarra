@@ -13,10 +13,10 @@
 
 ## Siguiente
 - [x] Clase 2 (versión 0.2): cuerdas por número, salteadas y juegos de oído
-- [ ] Clase 3 (semana 1): repaso y evaluación semanal (11 de 12 cuerdas a la primera)
+- [x] Clases 3 a 10 (versión 0.3): semanas 1 a 3 completas, con evaluaciones semanales, y bajada andaluza
 - [ ] Ajustar el guion de la clase 1 según la prueba real
-- [ ] Semana 2: palmas y metrónomo accesible
-- [ ] Semanas 3 y 4: notas pisadas, bajada andaluza y «Mi primera falseta»
+- [x] Palmas sintetizadas al pulso
+- [ ] Clases 11 y 12: bajada con compás de tangos y «Mi primera falseta» (evaluación de la semana 4)
 
 ## Más adelante
 - [ ] Afinador accesible por micrófono (notas sueltas)
@@ -25,6 +25,7 @@
 - [ ] Estudio de la conversación por voz con IA (con costes antes de decidir)
 
 ## Observaciones de la prueba real
+- Pendiente: comprobar en el iPad que las palmas se oyen bien y que el ritmo de 50-60 por minuto es cómodo.
 - 17/11: instrucciones claras. Un par de veces hablaron a la vez el profesor y VoiceOver.
   Corregido en 0.2.1 (pausas más largas, foco estable en el juego de oído y opción de pausa larga). Pendiente de confirmar en el iPad.
 

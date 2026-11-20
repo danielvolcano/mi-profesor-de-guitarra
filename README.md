@@ -24,19 +24,31 @@ Conviene hacerlo con ayuda de un familiar la primera vez.
 
 **Recomendado:** en *Ajustes → Accesibilidad → Contenido leído → Voces → Español (España)*, descargar una voz «mejorada», como Mónica. La voz del profesor sonará mucho más natural.
 
-## Qué incluye la versión 0.2
+## Qué incluye la versión 0.3
 
-- Pantalla de inicio con las 5 opciones. La primera, **Empezar mi clase de hoy**, se acuerda siempre de por dónde va.
-- **Clase 2 (unos 45 minutos):** las cuerdas por su número, en orden y salteadas, el método de «contar desde la sexta», y dos juegos de oído (¿sexta o primera? y ¿grave o aguda?). El saludo recuerda las dificultades registradas en la clase anterior.
-- **Clase 1 completa (unos 45 minutos):** partes de la guitarra, posición flamenca, las seis cuerdas, primer sonido con el pulgar, juego de oído, la bajada andaluza y la evaluación.
+Diez clases de unos 45 minutos, de la semana 1 al comienzo de la semana 4:
+
+| Clase | Semana | Contenido |
+|---|---|---|
+| 1 | 1 | Conocer la guitarra: partes, posición flamenca, las seis cuerdas |
+| 2 | 1 | Las cuerdas por su número y por su sonido |
+| 3 | 1 | **Evaluación de la semana 1**: 11 de 12 cuerdas salteadas a la primera |
+| 4 | 2 | El pulgar flamenco (pulgar apoyado) |
+| 5 | 2 | Índice y medio, alternando |
+| 6 | 2 | Pulso con palmas. **Evaluación de la semana 2**: secuencia 6-4-3-2 al pulso, como mucho una parada |
+| 7 | 3 | Qué es un traste: cejuela, mano izquierda y la primera nota pisada (fa) |
+| 8 | 3 | Notas limpias: sol, y la escala mi-fa-sol |
+| 9 | 3 | **Evaluación de la semana 3**: dictado de 10 notas, al menos 8 limpias |
+| 10 | 4 | La bajada andaluza: la, sol, fa, mi, con palmas |
+
+- Si una evaluación semanal no se supera, la clase se repite. La aplicación nunca avanza solo porque haya pasado el tiempo.
+- Palmas sintetizadas al pulso, con cuatro palmas de entrada y el «uno» más fuerte.
+- Juegos de oído en casi todas las clases: grave o aguda, cuerdas concretas y notas (mi, fa, sol, la).
+- *Practicar una canción*: tras la clase 10, permite tocar la bajada andaluza con palmas.
 - En cada paso: Continuar, Repetir, Escuchar ejemplo, Explícamelo de otra forma, Paso anterior, y Pausar y guardar.
-- Sonidos de ejemplo sintetizados, sin grabaciones de terceros.
 - Mi progreso, hablado y basado solo en lo registrado.
-- Repasar lo aprendido.
-- Ayuda y configuración: voz, velocidad y volumen.
-- Modo familiar: registro detallado, comprobaciones presenciales, repetir clases y copias de seguridad.
-
-Las clases siguientes se irán añadiendo. Mientras no estén, la aplicación lo dice y ofrece repetir la última clase disponible.
+- Modo familiar: incluye las evaluaciones semanales con su criterio.
+- Ajuste de la pausa antes de que hable el profesor, para que no se solape con VoiceOver.
 
 ## Cómo registra el progreso
 

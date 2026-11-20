@@ -3,7 +3,7 @@
 
 export const CUERDAS = { 6: 'E2', 5: 'A2', 4: 'D3', 3: 'G3', 2: 'B3', 1: 'E4' };
 const FRECUENCIAS = {
-  E2: 82.41, F2: 87.31, G2: 98.0, A2: 110.0, D3: 146.83, G3: 196.0, B3: 246.94, E4: 329.63,
+  E2: 82.41, F2: 87.31, G2: 98.0, A2: 110.0, B2: 123.47, C3: 130.81, D3: 146.83, G3: 196.0, B3: 246.94, E4: 329.63,
 };
 
 let contexto = null;
@@ -108,5 +108,68 @@ export function confirmacion() {
     o.connect(g).connect(ctx.destination);
     o.start(t);
     o.stop(t + 0.55);
+  });
+}
+
+// Palma sintetizada: ráfaga de ruido filtrado, corta y seca.
+let bufferPalma = null;
+function palma(ctx, cuando, fuerte) {
+  if (!bufferPalma) {
+    const n = Math.floor(ctx.sampleRate * 0.12);
+    bufferPalma = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = bufferPalma.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.018));
+  }
+  const f = ctx.createBufferSource();
+  f.buffer = bufferPalma;
+  const filtro = ctx.createBiquadFilter();
+  filtro.type = 'bandpass';
+  filtro.frequency.value = fuerte ? 1300 : 1700;
+  filtro.Q.value = 0.9;
+  const g = ctx.createGain();
+  g.gain.value = (fuerte ? 1.0 : 0.55) * volumen;
+  f.connect(filtro).connect(g).connect(ctx.destination);
+  f.start(cuando);
+  return f;
+}
+
+// Palmas al pulso. Opciones:
+//   bpm: pulsaciones por minuto; tiempos: número de palmas;
+//   cuentaPrevia: palmas iniciales antes de que entren las notas;
+//   notas: cuerdas o notas, una por tiempo tras la cuenta previa (se repiten en bucle hasta acabar).
+// El tiempo 1 de cada grupo de 4 suena más fuerte, como en el compás de tangos.
+export function tocarConPalmas({ bpm = 60, tiempos = 16, cuentaPrevia = 4, notas = null } = {}) {
+  const ctx = obtenerContexto();
+  if (typeof window !== 'undefined') window.__ultimasPalmas = { bpm, tiempos, cuentaPrevia, notas };
+  if (!ctx) return Promise.resolve();
+  const miReproduccion = ++reproduccion;
+  const pulso = 60 / bpm;
+  const inicio = ctx.currentTime + 0.1;
+  const fuentes = [];
+  const lista = notas ? (Array.isArray(notas) ? notas : [notas]).map(aNota) : null;
+  for (let t = 0; t < tiempos; t++) {
+    const cuando = inicio + t * pulso;
+    fuentes.push(palma(ctx, cuando, t % 4 === 0));
+    if (lista && t >= cuentaPrevia) {
+      const nota = lista[(t - cuentaPrevia) % lista.length];
+      const fuente = ctx.createBufferSource();
+      fuente.buffer = cuerdaPulsada(ctx, FRECUENCIAS[nota]);
+      const g = ctx.createGain();
+      g.gain.value = volumen;
+      fuente.connect(g).connect(ctx.destination);
+      fuente.start(cuando);
+      fuentes.push(fuente);
+    }
+  }
+  const duracion = tiempos * pulso + 1.5;
+  return new Promise((resolver) => {
+    const comprobar = setInterval(() => {
+      if (miReproduccion !== reproduccion) {
+        fuentes.forEach((f) => { try { f.stop(); } catch { /* ya parada */ } });
+        clearInterval(comprobar);
+        resolver();
+      }
+    }, 100);
+    setTimeout(() => { clearInterval(comprobar); resolver(); }, duracion * 1000);
   });
 }

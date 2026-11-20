@@ -2,9 +2,9 @@
 import * as P from './progreso.js';
 import { PROGRAMA, CONCEPTOS, HABILIDADES, buscarClase } from './contenido/catalogo.js';
 import { hablar, callar, vozDisponible } from './voz.js';
-import { tocar, detener, confirmacion, fijarVolumen, CUERDAS } from './sonido.js';
+import { tocar, tocarConPalmas, detener, confirmacion, fijarVolumen, CUERDAS } from './sonido.js';
 
-export const VERSION = '0.2.1';
+export const VERSION = '0.3.0';
 const $ = (id) => document.getElementById(id);
 const ahora = () => Date.now();
 
@@ -255,8 +255,9 @@ function mostrarPaso({ entrada = false, frases = null } = {}) {
   const continuar = $('b-continuar');
   const etiquetaAntes = continuar.textContent;
   continuar.hidden = esPregunta || esJuego;
-  continuar.textContent = feedback?.opcion.repetir ? 'Intentarlo otra vez' : (i === clase.pasos.length - 1 && !esPregunta ? 'Terminar la clase' : 'Continuar');
+  continuar.textContent = feedback?.opcion.volver ? 'Volver a intentarlo' : feedback?.opcion.repetir ? 'Intentarlo otra vez' : (i === clase.pasos.length - 1 && !esPregunta ? 'Terminar la clase' : 'Continuar');
   $('b-ejemplo').hidden = !paso.ejemplo;
+  $('b-ejemplo').textContent = paso.ejemplo?.etiqueta || 'Escuchar ejemplo';
   $('b-otra').hidden = !paso.otraForma || !!feedback;
   $('b-anterior').hidden = i === 0;
 
@@ -280,6 +281,11 @@ function mostrarPaso({ entrada = false, frases = null } = {}) {
     enfocar($('paso-titulo'));
     decir(dichas, retrasoTras(`${titulo}, encabezado nivel 2`));
   }
+}
+
+function reproducirEjemplo(ej) {
+  if (ej.palmas) return tocarConPalmas({ ...ej.palmas, notas: ej.notas || null });
+  return tocar(ej.notas, { intervalo: ej.intervalo || 1.1 });
 }
 
 function botonOpcion(etiqueta, accion, id) {
@@ -315,7 +321,8 @@ function responderJuego(eleccion) {
   juego.ronda++;
   juego.nota = null;
   const total = pasoActual().rondas;
-  const frases = [`${acierto ? '¡Bien! ' : ''}Era ${nombres[cuerda]} cuerda, ${correcta.frase}.`];
+  const nombre = nombres[cuerda] ? `${nombres[cuerda]} cuerda` : (correcta.nombre || correcta.etiqueta.toLowerCase());
+  const frases = [`${acierto ? '¡Bien! ' : ''}Era ${nombre}, ${correcta.frase}.`];
   if (juego.ronda >= total) {
     juego.terminado = true;
     P.responder(p, pasoActual().id, { aciertos: juego.aciertos, total }, ahora());
@@ -341,6 +348,13 @@ $('b-continuar').addEventListener('click', () => {
   silencio();
   const paso = pasoActual();
   if (feedback?.opcion.repetir) { feedback = null; return mostrarPaso(); }
+  if (feedback?.opcion.volver) {
+    const destino = Math.max(0, p.enCurso.paso - feedback.opcion.volver);
+    feedback = null;
+    P.irAPaso(p, destino, ahora());
+    guardar();
+    return mostrarPaso();
+  }
   feedback = null;
   juego = null;
   if (p.enCurso.paso >= clase.pasos.length - 1) return terminar();
@@ -380,7 +394,7 @@ $('b-otra').addEventListener('click', () => {
 $('b-ejemplo').addEventListener('click', () => {
   silencio();
   const paso = pasoActual();
-  if (paso.ejemplo) tocar(paso.ejemplo.notas, { intervalo: paso.ejemplo.intervalo || 1.1 });
+  if (paso.ejemplo) reproducirEjemplo(paso.ejemplo);
 });
 
 $('b-pausar').addEventListener('click', () => {
@@ -436,7 +450,7 @@ function irRepaso() {
 
 function irConcepto(c) {
   const acciones = [{ etiqueta: 'Repetir', accion: repetirTexto }];
-  if (c.ejemplo) acciones.unshift({ etiqueta: 'Escuchar ejemplo', principal: true, accion: () => { silencio(); tocar(c.ejemplo.notas); } });
+  if (c.ejemplo) acciones.unshift({ etiqueta: 'Escuchar ejemplo', principal: true, accion: () => { silencio(); reproducirEjemplo(c.ejemplo); } });
   irTexto({
     titulo: c.titulo, frases: c.texto, leer: true, acciones,
     volver: { etiqueta: 'Volver a Repasar', accion: irRepaso },
@@ -446,18 +460,41 @@ function irConcepto(c) {
 $('b-repaso').addEventListener('click', irRepaso);
 
 // ── Practicar una canción ────────────────────────────────
-$('b-cancion').addEventListener('click', () => irTexto({
-  titulo: 'Practicar una canción',
-  leer: true,
-  frases: [
-    'Tu primera pieza será la bajada andaluza: la, sol, fa, mi. Es el corazón de los tangos.',
-    'La aprenderás a tocar en la semana cuatro. Mientras tanto, puedes escucharla para irla metiendo en el oído.',
-  ],
-  acciones: [
-    { etiqueta: 'Escuchar la bajada andaluza', principal: true, accion: () => { silencio(); tocar(['A2', 'G2', 'F2', 'E2'], { intervalo: 0.9 }); } },
+const BAJADA = ['A2', 'G2', 'F2', 'E2'];
+$('b-cancion').addEventListener('click', () => {
+  const sabeBajada = !!p.habilidades.bajada?.estado;
+  const acciones = [
+    { etiqueta: 'Escuchar la bajada andaluza', principal: !sabeBajada, accion: () => { silencio(); tocar(BAJADA, { intervalo: 0.9 }); } },
+  ];
+  if (sabeBajada) {
+    acciones.unshift(
+      { etiqueta: 'Tocar la bajada con palmas lentas', principal: true, accion: () => { silencio(); tocarConPalmas({ bpm: 50, tiempos: 68, cuentaPrevia: 4 }); } },
+      { etiqueta: 'Tocar la bajada acompañado por la guitarra', accion: () => { silencio(); tocarConPalmas({ bpm: 50, tiempos: 68, cuentaPrevia: 4, notas: BAJADA }); } },
+    );
+  }
+  if (p.habilidades.pulso?.estado) {
+    acciones.push({ etiqueta: 'Palmas para practicar a tu aire', accion: () => { silencio(); tocarConPalmas({ bpm: 60, tiempos: 64, cuentaPrevia: 64 }); } });
+  }
+  acciones.push(
+    { etiqueta: 'Parar el sonido', accion: () => silencio() },
     { etiqueta: 'Escuchar las seis cuerdas al aire', accion: () => { silencio(); tocar([6, 5, 4, 3, 2, 1]); } },
-  ],
-}));
+  );
+  irTexto({
+    titulo: 'Practicar una canción',
+    leer: true,
+    frases: sabeBajada
+      ? [
+        'Aquí puedes practicar la bajada andaluza: la, sol, fa, mi.',
+        'Con las palmas lentas, empieza en la palma fuerte, después de cuatro de entrada. Dura algo más de un minuto.',
+        'Para parar antes, pulsa Parar el sonido.',
+      ]
+      : [
+        'Tu primera pieza será la bajada andaluza: la, sol, fa, mi. Es el corazón de los tangos.',
+        'La aprenderás en la clase diez. Mientras tanto, puedes escucharla para irla metiendo en el oído.',
+      ],
+    acciones,
+  });
+});
 
 // ── Progreso ─────────────────────────────────────────────
 $('b-progreso').addEventListener('click', () => irTexto({
@@ -534,12 +571,15 @@ function irFamiliar() {
     return `<tr><td>${HABILIDADES[id] || id}</td><td>${h.estado}</td><td>${NOMBRE_FUENTE[ult?.fuente] || ''} (${ult?.fecha || ''})</td></tr>`;
   }).join('');
   const difs = p.dificultades.map((d) => `<li>${d.texto} — ${d.resuelta ? `resuelta el ${d.fechaResuelta}` : `pendiente (desde ${d.fecha}, ${d.veces} ${d.veces === 1 ? 'vez' : 'veces'})`}</li>`).join('');
+  const evals = (p.evaluaciones || []).map((e) => `<li>${e.fecha} · semana ${e.semana}: ${e.superada ? 'superada' : 'no superada, se repite'}${e.aciertos != null ? ` (${e.aciertos} de ${e.total})` : ''} — criterio: ${e.criterio}</li>`).join('');
   reg.innerHTML = `
     <p>Clase actual: ${c ? `${c.numero}, ${c.titulo}` : '—'}${p.enCurso ? ` · a medias en el paso ${p.enCurso.paso + 1}` : ''}.</p>
     <h3>Sesiones</h3>
     ${filasSes ? `<table><thead><tr><th>Fecha</th><th>Clase</th><th>Tiempo</th><th>Estado</th></tr></thead><tbody>${filasSes}</tbody></table>` : '<p>Sin sesiones todavía.</p>'}
     <h3>Habilidades</h3>
     ${filasHab ? `<table><thead><tr><th>Habilidad</th><th>Estado</th><th>Última prueba</th></tr></thead><tbody>${filasHab}</tbody></table>` : '<p>Ninguna todavía.</p>'}
+    <h3>Evaluaciones semanales</h3>
+    ${evals ? `<ul>${evals}</ul>` : '<p>Ninguna todavía.</p>'}
     <h3>Dificultades</h3>
     ${difs ? `<ul>${difs}</ul>` : '<p>Ninguna anotada.</p>'}`;
 
